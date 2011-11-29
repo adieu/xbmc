@@ -8,8 +8,8 @@
 #include "FileOperationJob.h"
 #include "URIUtils.h"
 #include "filesystem/MultiPathDirectory.h"
+#include "utils/md5.h"
 #include <vector>
-#include <openssl/md5.h>
 
 using namespace XFILE;
 using namespace std;
@@ -108,11 +108,9 @@ bool CFileUtils::SubtitleFileSizeAndHash2(const CStdString &path, CStdString &di
   const size_t chksum_block_size = 4096;
 
   CFile file;
-  size_t i;
   uint8_t buffer1[chksum_block_size*4];
   uint64_t fileSize ;
-  unsigned char * tmp_hash;
-  char digest[MD5_DIGEST_LENGTH*2];
+
   // In natural language it calculates: size + 64k chksum of the first and last 64k
   // (even if they overlap because the file is smaller than 128k).
 
@@ -129,29 +127,21 @@ bool CFileUtils::SubtitleFileSizeAndHash2(const CStdString &path, CStdString &di
 
   file.Close(); //close file
 
-  tmp_hash = MD5((const unsigned char*)&buffer1[0], chksum_block_size, NULL);
-  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
-    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
-  }
-  digest1.Format("%s", digest);
+  XBMC::XBMC_MD5 digest1_md5;
+  digest1_md5.append((const unsigned char*)&buffer1[0],chksum_block_size);
+  digest1_md5.getDigest(digest1);
 
-  tmp_hash = MD5((const unsigned char*)&buffer1[chksum_block_size], chksum_block_size, NULL);
-  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
-    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
-  }
-  digest2.Format("%s", digest);
+  XBMC::XBMC_MD5 digest2_md5;
+  digest2_md5.append((const unsigned char*)&buffer1[chksum_block_size],chksum_block_size);
+  digest2_md5.getDigest(digest2);
 
-  tmp_hash = MD5((const unsigned char*)&buffer1[chksum_block_size*2], chksum_block_size, NULL);
-  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
-    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
-  }
-  digest3.Format("%s", digest);
+  XBMC::XBMC_MD5 digest3_md5;
+  digest3_md5.append((const unsigned char*)&buffer1[chksum_block_size*2],chksum_block_size);
+  digest3_md5.getDigest(digest3);
 
-  tmp_hash = MD5((const unsigned char*)&buffer1[chksum_block_size*3], chksum_block_size, NULL);
-  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
-    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
-  }
-  digest4.Format("%s", digest);
+  XBMC::XBMC_MD5 digest4_md5;
+  digest4_md5.append((const unsigned char*)&buffer1[chksum_block_size*3],chksum_block_size);
+  digest4_md5.getDigest(digest4);
 
   return true;
 }
