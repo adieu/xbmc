@@ -138,8 +138,6 @@ void CSettings::Initialize()
   m_lastUsedProfile = 0;
   m_currentProfile = 0;
   m_nextIdProfile = 0;
-
-  m_activeKeyboardMapping = "default";
 }
 
 CSettings::~CSettings(void)
@@ -680,7 +678,7 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
     int deinterlaceMode;
     bool deinterlaceModePresent = GetInteger(pElement, "deinterlacemode", deinterlaceMode, VS_DEINTERLACEMODE_OFF, VS_DEINTERLACEMODE_OFF, VS_DEINTERLACEMODE_FORCE);
     int interlaceMethod;
-    bool interlaceMethodPresent = GetInteger(pElement, "interlacemethod", interlaceMethod, VS_INTERLACEMETHOD_AUTO, VS_INTERLACEMETHOD_AUTO, VS_INTERLACEMETHOD_INVERSE_TELECINE);
+    bool interlaceMethodPresent = GetInteger(pElement, "interlacemethod", interlaceMethod, VS_INTERLACEMETHOD_AUTO, VS_INTERLACEMETHOD_AUTO, VS_INTERLACEMETHOD_MAX);
     // For smooth conversion of settings stored before the deinterlaceMode existed
     if (!deinterlaceModePresent && interlaceMethodPresent)
     {
@@ -701,7 +699,7 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
     m_defaultVideoSettings.m_DeinterlaceMode = (EDEINTERLACEMODE)deinterlaceMode;
     m_defaultVideoSettings.m_InterlaceMethod = (EINTERLACEMETHOD)interlaceMethod;
     int scalingMethod;
-    GetInteger(pElement, "scalingmethod", scalingMethod, VS_SCALINGMETHOD_LINEAR, VS_SCALINGMETHOD_NEAREST, VS_SCALINGMETHOD_SPLINE36);
+    GetInteger(pElement, "scalingmethod", scalingMethod, VS_SCALINGMETHOD_LINEAR, VS_SCALINGMETHOD_NEAREST, VS_SCALINGMETHOD_MAX);
     m_defaultVideoSettings.m_ScalingMethod = (ESCALINGMETHOD)scalingMethod;
 
     GetInteger(pElement, "viewmode", m_defaultVideoSettings.m_ViewMode, VIEW_MODE_NORMAL, VIEW_MODE_NORMAL, VIEW_MODE_CUSTOM);
@@ -756,9 +754,14 @@ bool CSettings::LoadSettings(const CStdString& strSettingsFile)
   if (g_guiSettings.GetBool("debug.showloginfo"))
   {
     g_advancedSettings.m_logLevel = std::max(g_advancedSettings.m_logLevelHint, LOG_LEVEL_DEBUG_FREEMEM);
-    CLog::SetLogLevel(g_advancedSettings.m_logLevel);
     CLog::Log(LOGNOTICE, "Enabled debug logging due to GUI setting (%d)", g_advancedSettings.m_logLevel);
   }
+  else
+  {
+    g_advancedSettings.m_logLevel = std::min(g_advancedSettings.m_logLevelHint, LOG_LEVEL_DEBUG/*LOG_LEVEL_NORMAL*/);
+    CLog::Log(LOGNOTICE, "Disabled debug logging due to GUI setting. Level %d.", g_advancedSettings.m_logLevel);
+  }  
+  CLog::SetLogLevel(g_advancedSettings.m_logLevel);
   return true;
 }
 

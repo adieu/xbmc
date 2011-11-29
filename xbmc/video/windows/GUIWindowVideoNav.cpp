@@ -371,6 +371,7 @@ bool CGUIWindowVideoNav::GetDirectory(const CStdString &strDirectory, CFileItemL
         }
       }
       else if (node == NODE_TYPE_TITLE_MOVIES ||
+               node == NODE_TYPE_SETS ||
                node == NODE_TYPE_RECENTLY_ADDED_MOVIES)
         items.SetContent("movies");
       else if (node == NODE_TYPE_TITLE_TVSHOWS)
@@ -423,7 +424,7 @@ void CGUIWindowVideoNav::LoadVideoInfo(CFileItemList &items)
 
   bool fileMetaData = (g_guiSettings.GetBool("myvideos.filemetadata") &&
                       !content.IsEmpty() &&
-                       m_stackingAvailable);
+                       m_stackingAvailable && g_settings.m_videoStacking);
 
   CFileItemList dbItems;
   /* NOTE: In the future when GetItemsForPath returns all items regardless of whether they're "in the library"
@@ -482,8 +483,8 @@ void CGUIWindowVideoNav::LoadVideoInfo(CFileItemList &items)
       }
       
       // set the watched overlay
-      if (pItem->HasVideoInfoTag())
-        pItem->SetOverlayImage(CGUIListItem::ICON_OVERLAY_UNWATCHED, pItem->GetVideoInfoTag()->m_playCount > 0);
+      if (pItem->IsVideo())
+        pItem->SetOverlayImage(CGUIListItem::ICON_OVERLAY_UNWATCHED, pItem->HasVideoInfoTag() && pItem->GetVideoInfoTag()->m_playCount > 0);
 
       // Since the item is not in our db, as an alternative clean its name
       if (fileMetaData)

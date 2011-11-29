@@ -57,7 +57,7 @@ mkdir -p $DIRNAME/$PACKAGE/DEBIAN
 echo "Package: $PACKAGE"                          >  $DIRNAME/$PACKAGE/DEBIAN/control
 echo "Priority: Extra"                            >> $DIRNAME/$PACKAGE/DEBIAN/control
 echo "Name: XBMC-ATV2"                            >> $DIRNAME/$PACKAGE/DEBIAN/control
-echo "Depends: curl, org.awkwardtv.whitelist, org.xbmc.xbmc-seatbeltunlock" >> $DIRNAME/$PACKAGE/DEBIAN/control
+echo "Depends: curl, org.awkwardtv.whitelist, com.nito.updatebegone, org.xbmc.xbmc-seatbeltunlock" >> $DIRNAME/$PACKAGE/DEBIAN/control
 echo "Version: $VERSION-$REVISION"                >> $DIRNAME/$PACKAGE/DEBIAN/control
 echo "Architecture: iphoneos-arm"                 >> $DIRNAME/$PACKAGE/DEBIAN/control
 echo "Description: XBMC Multimedia Center for AppleTV 2" >> $DIRNAME/$PACKAGE/DEBIAN/control
@@ -85,6 +85,11 @@ echo "  killall Lowtide"                          >> $DIRNAME/$PACKAGE/DEBIAN/po
 echo "else"                                       >> $DIRNAME/$PACKAGE/DEBIAN/postinst
 echo "  ln -sf /Applications/XBMC.frappliance /Applications/AppleTV.app/Appliances/XBMC.frappliance" >> $DIRNAME/$PACKAGE/DEBIAN/postinst
 echo "  killall AppleTV"                          >> $DIRNAME/$PACKAGE/DEBIAN/postinst
+echo "fi"                                         >> $DIRNAME/$PACKAGE/DEBIAN/postinst
+echo "FILE=/var/mobile/Media/Photos/seas0nTV.png" >> $DIRNAME/$PACKAGE/DEBIAN/postinst
+echo "if [ -f \$FILE ]; then"                     >> $DIRNAME/$PACKAGE/DEBIAN/postinst
+echo "   echo \"File \$FILE exists. removing...\"" >> $DIRNAME/$PACKAGE/DEBIAN/postinst
+echo "   rm \$FILE"                               >> $DIRNAME/$PACKAGE/DEBIAN/postinst
 echo "fi"                                         >> $DIRNAME/$PACKAGE/DEBIAN/postinst
 chmod +x $DIRNAME/$PACKAGE/DEBIAN/postinst
 

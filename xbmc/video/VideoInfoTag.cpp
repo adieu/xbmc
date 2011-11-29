@@ -473,7 +473,7 @@ void CVideoInfoTag::Serialize(CVariant& value)
   value["album"] = m_strAlbum;
   value["artist"] = m_strArtist;
   value["playcount"] = m_playCount;
-  value["lastPlayed"] = m_lastPlayed;
+  value["lastplayed"] = m_lastPlayed;
   value["top250"] = m_iTop250;
   value["year"] = m_iYear;
   value["season"] = m_iSeason;
@@ -612,8 +612,6 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prefix)
     node = node->NextSiblingElement("actor");
   }
 
-  m_set.clear();
-  m_setId.clear();
   node = movie->FirstChildElement("set");
   while (node)
   {
@@ -645,7 +643,6 @@ void CVideoInfoTag::ParseNative(const TiXmlElement* movie, bool prefix)
     node = node->NextSiblingElement("artist");
   }
 
-  m_streamDetails.Reset();
   node = movie->FirstChildElement("fileinfo");
   if (node)
   {

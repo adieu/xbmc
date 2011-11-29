@@ -195,6 +195,7 @@ namespace PYXBMC
     "executebuiltin(function) -- Execute a built in XBMC function.\n"
     "\n"
     "function       : string - builtin function to execute.\n"
+    "wait           : [opt] bool - True=Wait for end of execution, False=don't wait (Default)\n"
     "\n"
     "List of functions - http://wiki.xbmc.org/?title=List_of_Built_In_Functions \n"
     "\n"
@@ -206,9 +207,10 @@ namespace PYXBMC
   PyObject* XBMC_ExecuteBuiltIn(PyObject *self, PyObject *args)
   {
     char *cLine = NULL;
-    if (!PyArg_ParseTuple(args, (char*)"s", &cLine)) return NULL;
+    bool bWait = false;
+    if (!PyArg_ParseTuple(args, (char*)"s|b", &cLine, &bWait)) return NULL;
 
-    g_application.getApplicationMessenger().ExecBuiltIn(cLine);
+    g_application.getApplicationMessenger().ExecBuiltIn(cLine, bWait);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -230,6 +232,9 @@ namespace PYXBMC
   {
     char *cLine = NULL;
     if (!PyArg_ParseTuple(args, (char*)"s", &cLine)) return NULL;
+
+    CPyThreadState pyLock;
+
     if (!m_pXbmcHttp)
       m_pXbmcHttp = new CXbmcHttp();
     CStdString method = cLine;
@@ -249,12 +254,17 @@ namespace PYXBMC
         execute = cmd.Left(open);
       }
       else //open bracket but no close
+      {
+        pyLock.Restore();
         return PyString_FromString("");
+      }
     }
     else //no parameters
       execute = cmd;
 
     CURL::Decode(parameter);
+
+    pyLock.Restore();
     return PyString_FromString(CHttpApi::MethodCall(execute, parameter).c_str());
   }
 #endif
@@ -1032,20 +1042,27 @@ namespace PYXBMC
   InitXBMCTypes(bool bInitTypes)
   {
     initKeyboard_Type();
-    initRenderCapture_Type();
     initPlayer_Type();
     initPlayList_Type();
     initPlayListItem_Type();
     initInfoTagMusic_Type();
     initInfoTagVideo_Type();
 
+#ifdef HAS_PYRENDERCAPTURE
+    initRenderCapture_Type();
+#endif
+
     if (PyType_Ready(&Keyboard_Type) < 0 ||
-        PyType_Ready(&RenderCapture_Type) < 0 ||
         PyType_Ready(&Player_Type) < 0 ||
         PyType_Ready(&PlayList_Type) < 0 ||
         PyType_Ready(&PlayListItem_Type) < 0 ||
         PyType_Ready(&InfoTagMusic_Type) < 0 ||
         PyType_Ready(&InfoTagVideo_Type) < 0) return;
+
+#ifdef HAS_PYRENDERCAPTURE
+    if (PyType_Ready(&RenderCapture_Type) < 0)
+      return;
+#endif
   }
 
   PyMODINIT_FUNC
@@ -1062,12 +1079,15 @@ namespace PYXBMC
     PyObject* pXbmcModule;
 
     Py_INCREF(&Keyboard_Type);
-    Py_INCREF(&RenderCapture_Type);
     Py_INCREF(&Player_Type);
     Py_INCREF(&PlayList_Type);
     Py_INCREF(&PlayListItem_Type);
     Py_INCREF(&InfoTagMusic_Type);
     Py_INCREF(&InfoTagVideo_Type);
+
+#ifdef HAS_PYRENDERCAPTURE
+    Py_INCREF(&RenderCapture_Type);
+#endif
 
     pXbmcModule = Py_InitModule((char*)"xbmc", xbmcMethods);
     if (pXbmcModule == NULL) return;
@@ -1115,7 +1135,9 @@ namespace PYXBMC
     PyModule_AddIntConstant(pXbmcModule, (char*)"LOGNONE", LOGNONE);
     PyModule_AddObject(pXbmcModule, (char*)"abortRequested", PyBool_FromLong(0));
 
+#ifdef HAS_PYRENDERCAPTURE
     PyModule_AddObject(pXbmcModule, (char*)"RenderCapture", (PyObject*)&RenderCapture_Type);
+#endif
 
     // render capture user states
     PyModule_AddIntConstant(pXbmcModule, (char*)"CAPTURE_STATE_WORKING", (int)CAPTURESTATE_WORKING);
