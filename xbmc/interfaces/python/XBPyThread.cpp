@@ -92,7 +92,7 @@ void XBPyThread::setSource(const CStdString &src)
 {
 #ifdef TARGET_WINDOWS
   CStdString strsrc = src;
-  g_charsetConverter.utf8ToStringCharset(strsrc);
+  g_charsetConverter.utf8ToSystem(strsrc);
   m_source  = new char[strsrc.GetLength()+1];
   strcpy(m_source, strsrc);
 #else
@@ -165,7 +165,7 @@ void XBPyThread::Process()
 #ifdef TARGET_WINDOWS
   {
     CStdString strTmp(_P(addons[i]->LibPath()));
-    g_charsetConverter.utf8ToStringCharset(strTmp);
+    g_charsetConverter.utf8ToSystem(strTmp);
     path += PY_PATH_SEP + strTmp;
   }
 #else
@@ -317,6 +317,7 @@ void XBPyThread::Process()
         CLog::Log(LOGINFO, "<unknown exception type>");
       }
 
+      PYXBMC::PyXBMCGUILock();
       CGUIDialogKaiToast *pDlgToast = (CGUIDialogKaiToast*)g_windowManager.GetWindow(WINDOW_DIALOG_KAI_TOAST);
       if (pDlgToast)
       {
@@ -334,6 +335,7 @@ void XBPyThread::Process()
         desc.Format(g_localizeStrings.Get(2100), script);
         pDlgToast->QueueNotification(CGUIDialogKaiToast::Error, g_localizeStrings.Get(257), desc);
       }
+      PYXBMC::PyXBMCGUIUnlock();
     }
 
     Py_XDECREF(exc_type);

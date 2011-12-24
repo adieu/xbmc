@@ -80,6 +80,9 @@ bool CFile::Cache(const CStdString& strFileName, const CStdString& strDest, XFIL
 {
   CFile file;
 
+  if (strFileName.empty() || strDest.empty())
+    return false;
+
   // special case for zips - ignore caching
   CURL url(strFileName);
   if (URIUtils::IsInZIP(strFileName))
@@ -214,16 +217,15 @@ bool CFile::Open(const CStdString& strFileName, unsigned int flags)
   try
   {
     bool bPathInCache;
-    CURL url2(strFileName);
-    if (url2.GetProtocol() == "zip")
-      url2.SetOptions("");
-    if (!g_directoryCache.FileExists(url2.Get(), bPathInCache) )
+    CURL url(URIUtils::SubstitutePath(strFileName));
+    if (url.GetProtocol() == "zip")
+      url.SetOptions("");
+    if (!g_directoryCache.FileExists(url.Get(), bPathInCache) )
     {
       if (bPathInCache)
         return false;
     }
 
-    CURL url(URIUtils::SubstitutePath(strFileName));
     if ( (flags & READ_NO_CACHE) == 0 && URIUtils::IsInternetStream(url) && !CUtil::IsPicture(strFileName) )
       m_flags |= READ_CACHED;
 
@@ -341,7 +343,7 @@ bool CFile::OpenForWrite(const CStdString& strFileName, bool bOverWrite)
 
 bool CFile::Exists(const CStdString& strFileName, bool bUseCache /* = true */)
 {
-  CURL url;
+  CURL url(URIUtils::SubstitutePath(strFileName));
   
   try
   {
@@ -351,13 +353,11 @@ bool CFile::Exists(const CStdString& strFileName, bool bUseCache /* = true */)
     if (bUseCache)
     {
       bool bPathInCache;
-      if (g_directoryCache.FileExists(strFileName, bPathInCache) )
+      if (g_directoryCache.FileExists(url.Get(), bPathInCache) )
         return true;
       if (bPathInCache)
         return false;
     }
-
-    url = URIUtils::SubstitutePath(strFileName);
 
     auto_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
     if (!pFile.get())
