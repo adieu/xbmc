@@ -1020,6 +1020,11 @@ namespace VIDEO
       movieDetails.m_basePath = pItem->GetBaseMoviePath(videoFolder);
     movieDetails.m_parentPathID = m_database.AddPath(URIUtils::GetParentPath(movieDetails.m_basePath));
 
+    movieDetails.m_strFileNameAndPath = pItem->GetPath();
+
+    if (pItem->m_bIsFolder)
+      movieDetails.m_strPath = pItem->GetPath();
+
     CStdString strTitle(movieDetails.m_strTitle);
 
     if (idShow > -1 && content == CONTENT_TVSHOWS)
@@ -1440,17 +1445,10 @@ namespace VIDEO
         }
       }
 
-      if (!nfoFile.IsEmpty() && item->IsOpticalMediaFile())
+      if (nfoFile.IsEmpty() && item->IsOpticalMediaFile())
       {
-        CStdString parent(URIUtils::GetParentPath(item->GetPath()));
-        CStdString parentFolder(parent);
-        URIUtils::RemoveSlashAtEnd(parentFolder);
-        if (parentFolder == "VIDEO_TS" || parentFolder == "BDMV")
-        { // check for movie.nfo in the parent folder
-          parent = URIUtils::GetParentPath(parent);
-          CFileItem parentDirectory(parent, true);
-          nfoFile = GetnfoFile(&parentDirectory, true);
-        }
+        CFileItem parentDirectory(item->GetLocalMetadataPath(), true);
+        nfoFile = GetnfoFile(&parentDirectory, true);
       }
     }
     // folders (or stacked dvds) can take any nfo file if there's a unique one
@@ -1489,14 +1487,9 @@ namespace VIDEO
   bool CVideoInfoScanner::GetDetails(CFileItem *pItem, CScraperUrl &url, const ScraperPtr& scraper, CNfoFile *nfoFile, CGUIDialogProgress* pDialog /* = NULL */)
   {
     CVideoInfoTag movieDetails;
-    movieDetails.m_strFileNameAndPath = pItem->GetPath();
 
     CVideoInfoDownloader imdb(scraper);
     bool ret = imdb.GetDetails(url, movieDetails, pDialog);
-    if (pItem->m_bIsFolder)
-      movieDetails.m_strPath = pItem->GetPath();
-    else
-      movieDetails.m_strFileNameAndPath = pItem->GetPath();
 
     if (ret)
     {
